@@ -1,0 +1,53 @@
+name: Load Docker Image
+description: Loads a Docker image that was saved by another workflow as a workflow artifact.
+
+inputs:
+  artifact:
+    description: Name of the uploaded artifact containing the image.
+    default: image
+    required: false
+  commit:
+    description: Commit SHA of the workflow run that uploaded the image.
+    required: true
+  workflow:
+    description: Workflow file name or ID
+    required: true
+
+outputs:
+  repository:
+    description: Repository name for the loaded image.
+    value: ${{ steps.set-metadata.outputs.repository }}
+  tag:
+    description: The first tag contained in the loaded image.
+    value: ${{ steps.set-metadata.outputs.tag }}
+  tags:
+    description: JSON string containing an array of all tags for the loaded image.
+    value: ${{ steps.set-metadata.outputs.tags }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Download artifact from other workflow
+      uses: dawidd6/action-download-artifact@v2
+      with:
+        commit: ${{ inputs.commit }}
+        workflow: ${{ inputs.workflow }}
+        name: ${{ inputs.artifact }}
+        path: ${{ runner.temp }}
+        workflow_conclusion: success
+
+    - name: Load
+      run: |
+        docker load --input "${{ steps.download.outputs.download-path }}/image.tar"
+      shell: sh
+
+    - id: set-metadata
+      name: Set metadata outputs
+      run: |
+        REPOSITORY=$(cat "${{ steps.download.outputs.download-path }}/metadata.json" | jq -cr '.tags[0] | split(":")[0]')
+        TAG=$(cat "${{ steps.download.outputs.download-path }}/metadata.json" | jq -cr '.tags[0]')
+        TAGS=$(cat "${{ steps.download.outputs.download-path }}/metadata.json" | jq -c '.tags')
+        echo "::set-output name=repository::${REPOSITORY}"
+        echo "::set-output name=tag::${TAG}"
+        echo "::set-output name=tags::${TAGS}"
+      shell: bash
