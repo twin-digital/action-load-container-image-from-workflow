@@ -44,9 +44,9 @@ runs:
     - id: set-metadata
       name: Set metadata outputs
       run: |
-        REPOSITORY=$(cat "${{ steps.download.outputs.download-path }}/metadata.json" | jq -cr '.tags[0] | split(":")[0]')
-        TAG=$(cat "${{ steps.download.outputs.download-path }}/metadata.json" | jq -cr '.tags[0]')
-        TAGS=$(cat "${{ steps.download.outputs.download-path }}/metadata.json" | jq -c '.tags')
+        REPOSITORY=$(cat "${{ runner.temp }}/metadata.json" | jq -cr '.tags[0] | split(":")[0]')
+        TAG=$(cat "${{ runner.temp }}/metadata.json" | jq -cr '.tags[0]')
+        TAGS=$(cat "${{ runner.temp }}/metadata.json" | jq -c '.tags')
         echo "::set-output name=repository::${REPOSITORY}"
         echo "::set-output name=tag::${TAG}"
         echo "::set-output name=tags::${TAGS}"
