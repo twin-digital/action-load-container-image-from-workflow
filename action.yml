@@ -38,7 +38,7 @@ runs:
 
     - name: Load
       run: |
-        docker load --input "${{ steps.download.outputs.download-path }}/image.tar"
+        docker load --input "${{ runner.temp }}/image.tar"
       shell: sh
 
     - id: set-metadata
